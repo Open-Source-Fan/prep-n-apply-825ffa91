@@ -46,9 +46,9 @@ function readinessColor(level: string) {
 }
 
 function barColor(score: number) {
-  if (score >= 75) return "hsl(var(--success))";
-  if (score >= 50) return "hsl(var(--warning))";
-  return "hsl(var(--destructive))";
+  if (score >= 75) return "var(--success)";
+  if (score >= 50) return "var(--warning)";
+  return "var(--destructive)";
 }
 
 function Report() {
@@ -96,9 +96,9 @@ function Report() {
             <h3 className="mb-3 font-semibold">Competency breakdown</h3>
             <ResponsiveContainer width="100%" height={280}>
               <RadarChart data={report.competencies}>
-                <PolarGrid stroke="hsl(var(--border))" />
-                <PolarAngleAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                <Radar dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.4} />
+                <PolarGrid stroke="var(--border)" />
+                <PolarAngleAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
+                <Radar dataKey="score" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.4} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
@@ -106,8 +106,8 @@ function Report() {
             <h3 className="mb-3 font-semibold">Per-question performance</h3>
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={report.perQuestion.map((q, i) => ({ name: `Q${i + 1}`, score: q.score }))}>
-                <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                <YAxis domain={[0, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
+                <XAxis dataKey="name" tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
+                <YAxis domain={[0, 100]} tick={{ fill: "var(--muted-foreground)", fontSize: 11 }} />
                 <Bar dataKey="score" radius={[6, 6, 0, 0]}>
                   {report.perQuestion.map((q, i) => (
                     <Cell key={i} fill={barColor(q.score)} />
