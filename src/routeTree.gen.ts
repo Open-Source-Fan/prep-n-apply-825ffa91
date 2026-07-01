@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSwotRouteImport } from './routes/_authenticated/swot'
+import { Route as AuthenticatedStudyRouteImport } from './routes/_authenticated/study'
 import { Route as AuthenticatedSetupRouteImport } from './routes/_authenticated/setup'
 import { Route as AuthenticatedRoadmapRouteImport } from './routes/_authenticated/roadmap'
 import { Route as AuthenticatedResumeRouteImport } from './routes/_authenticated/resume'
@@ -39,6 +40,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedSwotRoute = AuthenticatedSwotRouteImport.update({
   id: '/swot',
   path: '/swot',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStudyRoute = AuthenticatedStudyRouteImport.update({
+  id: '/study',
+  path: '/study',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSetupRoute = AuthenticatedSetupRouteImport.update({
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/resume': typeof AuthenticatedResumeRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
   '/setup': typeof AuthenticatedSetupRoute
+  '/study': typeof AuthenticatedStudyRoute
   '/swot': typeof AuthenticatedSwotRoute
   '/interview/$id': typeof AuthenticatedInterviewIdRoute
   '/report/$id': typeof AuthenticatedReportIdRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/resume': typeof AuthenticatedResumeRoute
   '/roadmap': typeof AuthenticatedRoadmapRoute
   '/setup': typeof AuthenticatedSetupRoute
+  '/study': typeof AuthenticatedStudyRoute
   '/swot': typeof AuthenticatedSwotRoute
   '/interview/$id': typeof AuthenticatedInterviewIdRoute
   '/report/$id': typeof AuthenticatedReportIdRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/_authenticated/resume': typeof AuthenticatedResumeRoute
   '/_authenticated/roadmap': typeof AuthenticatedRoadmapRoute
   '/_authenticated/setup': typeof AuthenticatedSetupRoute
+  '/_authenticated/study': typeof AuthenticatedStudyRoute
   '/_authenticated/swot': typeof AuthenticatedSwotRoute
   '/_authenticated/interview/$id': typeof AuthenticatedInterviewIdRoute
   '/_authenticated/report/$id': typeof AuthenticatedReportIdRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/roadmap'
     | '/setup'
+    | '/study'
     | '/swot'
     | '/interview/$id'
     | '/report/$id'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/roadmap'
     | '/setup'
+    | '/study'
     | '/swot'
     | '/interview/$id'
     | '/report/$id'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/_authenticated/resume'
     | '/_authenticated/roadmap'
     | '/_authenticated/setup'
+    | '/_authenticated/study'
     | '/_authenticated/swot'
     | '/_authenticated/interview/$id'
     | '/_authenticated/report/$id'
@@ -201,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/swot'
       fullPath: '/swot'
       preLoaderRoute: typeof AuthenticatedSwotRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/study': {
+      id: '/_authenticated/study'
+      path: '/study'
+      fullPath: '/study'
+      preLoaderRoute: typeof AuthenticatedStudyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/setup': {
@@ -269,6 +288,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedResumeRoute: typeof AuthenticatedResumeRoute
   AuthenticatedRoadmapRoute: typeof AuthenticatedRoadmapRoute
   AuthenticatedSetupRoute: typeof AuthenticatedSetupRoute
+  AuthenticatedStudyRoute: typeof AuthenticatedStudyRoute
   AuthenticatedSwotRoute: typeof AuthenticatedSwotRoute
   AuthenticatedInterviewIdRoute: typeof AuthenticatedInterviewIdRoute
   AuthenticatedReportIdRoute: typeof AuthenticatedReportIdRoute
@@ -281,6 +301,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedResumeRoute: AuthenticatedResumeRoute,
   AuthenticatedRoadmapRoute: AuthenticatedRoadmapRoute,
   AuthenticatedSetupRoute: AuthenticatedSetupRoute,
+  AuthenticatedStudyRoute: AuthenticatedStudyRoute,
   AuthenticatedSwotRoute: AuthenticatedSwotRoute,
   AuthenticatedInterviewIdRoute: AuthenticatedInterviewIdRoute,
   AuthenticatedReportIdRoute: AuthenticatedReportIdRoute,
