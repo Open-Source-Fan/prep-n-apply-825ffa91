@@ -178,7 +178,17 @@ Return JSON: { "matchScore": 0-100, "summary": "...", "strengths": ["..."], "ski
 // 6. Career roadmap
 export const generateRoadmap = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { targetRole: string; currentPosition?: string; targetCompany?: string; timeline?: string; context?: string }) => d)
+  .inputValidator((d: { targetRole: string; currentPosition?: string; targetCompany?: string; timeline?: string; context?: string }) =>
+    z
+      .object({
+        targetRole: shortStr.min(1),
+        currentPosition: shortStr.optional(),
+        targetCompany: shortStr.optional(),
+        timeline: shortStr.optional(),
+        context: bigStr.optional(),
+      })
+      .parse(d),
+  )
   .handler(async ({ data }) => {
     return runJson<{
       summary: string;
