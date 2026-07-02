@@ -93,7 +93,16 @@ Return JSON: { "questions": [ { "id": "q1", "text": "...", "category": "Technica
 export const evaluateAnswer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: { question: string; answer: string; jobTitle: string; difficulty: string; category?: string }) => d,
+    (d: { question: string; answer: string; jobTitle: string; difficulty: string; category?: string }) =>
+      z
+        .object({
+          question: midStr.min(1),
+          answer: bigStr,
+          jobTitle: shortStr.min(1),
+          difficulty: shortStr.min(1),
+          category: shortStr.optional(),
+        })
+        .parse(d),
   )
   .handler(async ({ data }) => {
     return runJson<{
