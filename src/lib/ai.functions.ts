@@ -223,7 +223,9 @@ Return JSON: { "strengths": ["data-backed..."], "weaknesses": ["real gaps..."], 
 // 8. Study plan
 export const generateStudyPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { weakAreas: string; role: string }) => d)
+  .inputValidator((d: { weakAreas: string; role: string }) =>
+    z.object({ weakAreas: bigStr.min(1), role: shortStr.min(1) }).parse(d),
+  )
   .handler(async ({ data }) => {
     return runJson<{
       summary: string;
