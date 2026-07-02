@@ -65,7 +65,18 @@ export const generateQuestions = createServerFn({ method: "POST" })
       difficulty: string;
       jdAnalysis?: unknown;
       count?: number;
-    }) => d,
+    }) =>
+      z
+        .object({
+          jobTitle: shortStr.min(1),
+          company: shortStr.optional(),
+          interviewerStyle: shortStr.min(1),
+          interviewType: shortStr.min(1),
+          difficulty: shortStr.min(1),
+          jdAnalysis: z.unknown().optional(),
+          count: z.number().int().min(1).max(20).optional(),
+        })
+        .parse(d),
   )
   .handler(async ({ data }) => {
     const count = data.count ?? 6;
