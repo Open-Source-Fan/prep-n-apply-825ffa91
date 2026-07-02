@@ -204,7 +204,7 @@ Return JSON: { "summary": "...", "phases": [ {"title":"Phase 1: ...","weeks":"We
 // 7. SWOT analysis
 export const generateSWOT = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { context: string }) => d)
+  .inputValidator((d: { context: string }) => z.object({ context: bigStr.min(1) }).parse(d))
   .handler(async ({ data }) => {
     return runJson<{
       strengths: string[];
