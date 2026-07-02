@@ -1,7 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { generateText } from "ai";
+import { z } from "zod";
 import { createLovableAiGatewayProvider, CHAT_MODEL } from "./ai-gateway.server";
+
+// Shared validation limits to prevent oversized/malicious payloads reaching the LLM
+const shortStr = z.string().trim().max(300);
+const midStr = z.string().trim().max(2000);
+const bigStr = z.string().trim().max(20000);
 
 function getModel() {
   const key = process.env.LOVABLE_API_KEY;
@@ -34,7 +40,9 @@ async function runJson<T>(system: string, prompt: string): Promise<T> {
 // 1. Analyze job description
 export const analyzeJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { jobTitle: string; company?: string; jobDescription?: string }) => d)
+  .inputValidator((d: { jobTitle: string; company?: string; jobDescription?: string }) =>
+    z.object({ jobTitle: shortStr.min(1), company: shortStr.optional(), jobDescription: bigStr.optional() }).parse(d),
+  )
   .handler(async ({ data }) => {
     return runJson<{ summary: string; requiredSkills: string[]; roleExpectations: string[]; focusAreas: string[] }>(
       "You are an expert technical recruiter analyzing a job.",
@@ -57,7 +65,18 @@ export const generateQuestions = createServerFn({ method: "POST" })
       difficulty: string;
       jdAnalysis?: unknown;
       count?: number;
-    }) => d,
+    }) =>
+      z
+        .object({
+          jobTitle: shortStr.min(1),
+          company: shortStr.optional(),
+          interviewerStyle: shortStr.min(1),
+          interviewType: shortStr.min(1),
+          difficulty: shortStr.min(1),
+          jdAnalysis: z.unknown().optional(),
+          count: z.number().int().min(1).max(20).optional(),
+        })
+        .parse(d),
   )
   .handler(async ({ data }) => {
     const count = data.count ?? 6;
@@ -74,7 +93,16 @@ Return JSON: { "questions": [ { "id": "q1", "text": "...", "category": "Technica
 export const evaluateAnswer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (d: { question: string; answer: string; jobTitle: string; difficulty: string; category?: string }) => d,
+    (d: { question: string; answer: string; jobTitle: string; difficulty: string; category?: string }) =>
+      z
+        .object({
+          question: midStr.min(1),
+          answer: bigStr,
+          jobTitle: shortStr.min(1),
+          difficulty: shortStr.min(1),
+          category: shortStr.optional(),
+        })
+        .parse(d),
   )
   .handler(async ({ data }) => {
     return runJson<{
@@ -96,7 +124,17 @@ Return JSON: { "scores": { "technicalDepth": n, "communication": n, "problemSolv
 // 4. Generate full interview report
 export const generateReport = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { jobTitle: string; difficulty: string; qa: { question: string; answer: string; overall?: number }[] }) => d)
+  .inputValidator((d: { jobTitle: string; difficulty: string; qa: { question: string; answer: string; overall?: number }[] }) =>
+    z
+      .object({
+        jobTitle: shortStr.min(1),
+        difficulty: shortStr.min(1),
+        qa: z
+          .array(z.object({ question: midStr, answer: bigStr, overall: z.number().optional() }))
+          .max(50),
+      })
+      .parse(d),
+  )
   .handler(async ({ data }) => {
     return runJson<{
       overall: number;
@@ -117,7 +155,9 @@ Return JSON: { "overall": 0-100, "readinessLevel": "Strong Candidate|Ready|Almos
 // 5. Resume analyzer
 export const analyzeResume = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { resume: string; jobDescription: string }) => d)
+  .inputValidator((d: { resume: string; jobDescription: string }) =>
+    z.object({ resume: bigStr.min(1), jobDescription: bigStr.min(1) }).parse(d),
+  )
   .handler(async ({ data }) => {
     return runJson<{
       matchScore: number;
@@ -138,7 +178,17 @@ Return JSON: { "matchScore": 0-100, "summary": "...", "strengths": ["..."], "ski
 // 6. Career roadmap
 export const generateRoadmap = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { targetRole: string; currentPosition?: string; targetCompany?: string; timeline?: string; context?: string }) => d)
+  .inputValidator((d: { targetRole: string; currentPosition?: string; targetCompany?: string; timeline?: string; context?: string }) =>
+    z
+      .object({
+        targetRole: shortStr.min(1),
+        currentPosition: shortStr.optional(),
+        targetCompany: shortStr.optional(),
+        timeline: shortStr.optional(),
+        context: bigStr.optional(),
+      })
+      .parse(d),
+  )
   .handler(async ({ data }) => {
     return runJson<{
       summary: string;
@@ -154,7 +204,7 @@ Return JSON: { "summary": "...", "phases": [ {"title":"Phase 1: ...","weeks":"We
 // 7. SWOT analysis
 export const generateSWOT = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { context: string }) => d)
+  .inputValidator((d: { context: string }) => z.object({ context: bigStr.min(1) }).parse(d))
   .handler(async ({ data }) => {
     return runJson<{
       strengths: string[];
@@ -173,7 +223,9 @@ Return JSON: { "strengths": ["data-backed..."], "weaknesses": ["real gaps..."], 
 // 8. Study plan
 export const generateStudyPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { weakAreas: string; role: string }) => d)
+  .inputValidator((d: { weakAreas: string; role: string }) =>
+    z.object({ weakAreas: bigStr.min(1), role: shortStr.min(1) }).parse(d),
+  )
   .handler(async ({ data }) => {
     return runJson<{
       summary: string;
@@ -189,7 +241,17 @@ Return JSON: { "summary": "...", "topics": [ {"name":"...","status":"needs revie
 // 9. AI Coach chat (returns markdown text)
 export const coachChat = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { messages: { role: "user" | "assistant"; content: string }[]; context?: string }) => d)
+  .inputValidator((d: { messages: { role: "user" | "assistant"; content: string }[]; context?: string }) =>
+    z
+      .object({
+        messages: z
+          .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().max(10000) }))
+          .min(1)
+          .max(50),
+        context: bigStr.optional(),
+      })
+      .parse(d),
+  )
   .handler(async ({ data }) => {
     const { text } = await generateText({
       model: getModel(),
