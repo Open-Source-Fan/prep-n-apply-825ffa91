@@ -40,7 +40,9 @@ async function runJson<T>(system: string, prompt: string): Promise<T> {
 // 1. Analyze job description
 export const analyzeJob = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { jobTitle: string; company?: string; jobDescription?: string }) => d)
+  .inputValidator((d: { jobTitle: string; company?: string; jobDescription?: string }) =>
+    z.object({ jobTitle: shortStr.min(1), company: shortStr.optional(), jobDescription: bigStr.optional() }).parse(d),
+  )
   .handler(async ({ data }) => {
     return runJson<{ summary: string; requiredSkills: string[]; roleExpectations: string[]; focusAreas: string[] }>(
       "You are an expert technical recruiter analyzing a job.",
