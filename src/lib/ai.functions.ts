@@ -155,7 +155,9 @@ Return JSON: { "overall": 0-100, "readinessLevel": "Strong Candidate|Ready|Almos
 // 5. Resume analyzer
 export const analyzeResume = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { resume: string; jobDescription: string }) => d)
+  .inputValidator((d: { resume: string; jobDescription: string }) =>
+    z.object({ resume: bigStr.min(1), jobDescription: bigStr.min(1) }).parse(d),
+  )
   .handler(async ({ data }) => {
     return runJson<{
       matchScore: number;
