@@ -131,3 +131,41 @@
 @utility animate-float {
   animation: float 4s ease-in-out infinite;
 }
+
+/* ---- 3D-like animated background ---- */
+@keyframes orbDrift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(40px, -30px, 0) scale(1.08); }
+  66% { transform: translate3d(-30px, 20px, 0) scale(0.95); }
+}
+@utility orb-float {
+  animation: orbDrift 16s ease-in-out infinite;
+  will-change: transform;
+}
+
+.perspective-grid {
+  perspective: 320px;
+  perspective-origin: 50% 0%;
+  mask-image: linear-gradient(to top, black 5%, transparent 92%);
+  -webkit-mask-image: linear-gradient(to top, black 5%, transparent 92%);
+}
+@keyframes gridScroll {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 60px; }
+}
+.grid-plane {
+  position: absolute;
+  inset: -50% -50% 0 -50%;
+  transform: rotateX(68deg);
+  transform-origin: 50% 100%;
+  background-image:
+    linear-gradient(to right, oklch(0.82 0.12 187 / 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.82 0.12 187 / 0.22) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridScroll 3.5s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-float, .grid-plane { animation: none; }
+}
+
