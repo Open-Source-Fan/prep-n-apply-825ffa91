@@ -65,6 +65,7 @@ export const generateQuestions = createServerFn({ method: "POST" })
       interviewType: string;
       difficulty: string;
       jdAnalysis?: unknown;
+      resume?: string;
       count?: number;
     }) =>
       z
@@ -75,17 +76,21 @@ export const generateQuestions = createServerFn({ method: "POST" })
           interviewType: shortStr.min(1),
           difficulty: shortStr.min(1),
           jdAnalysis: z.unknown().optional(),
+          resume: bigStr.optional(),
           count: z.number().int().min(1).max(20).optional(),
         })
         .parse(d),
   )
   .handler(async ({ data }) => {
     const count = data.count ?? 6;
+    const resumeBlock = data.resume?.trim()
+      ? `\nCandidate resume (use it to PERSONALIZE difficulty and focus areas — probe claimed experience, target gaps between the resume and the role, and calibrate depth to their apparent seniority):\n${data.resume.slice(0, 6000)}`
+      : "";
     return runJson<{ questions: { id: string; text: string; category: string; difficulty: string }[] }>(
       `You are a ${data.interviewerStyle}-style interviewer conducting a ${data.interviewType} interview.`,
       `Generate exactly ${count} interview questions for a ${data.difficulty}-level "${data.jobTitle}" candidate at ${data.company || "a top company"}.
 Interview type: ${data.interviewType}. Style: ${data.interviewerStyle}.
-JD analysis: ${JSON.stringify(data.jdAnalysis || {})}
+JD analysis: ${JSON.stringify(data.jdAnalysis || {})}${resumeBlock}
 Return JSON: { "questions": [ { "id": "q1", "text": "...", "category": "Technical|Behavioral|System Design|Problem Solving", "difficulty": "${data.difficulty}" } ] }`,
     );
   });
