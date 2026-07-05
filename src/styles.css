@@ -143,6 +143,19 @@
   will-change: transform;
 }
 
+/* Full-page flat grid — covers the whole background consistently on every page. */
+.bg-grid-full {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, oklch(0.75 0.15 158 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.6 0.14 250 / 0.05) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: radial-gradient(120% 120% at 50% 0%, black 55%, transparent 100%);
+  -webkit-mask-image: radial-gradient(120% 120% at 50% 0%, black 55%, transparent 100%);
+}
+
+/* Receding perspective floor for extra depth at the bottom. */
 .perspective-grid {
   perspective: 320px;
   perspective-origin: 50% 0%;
@@ -159,13 +172,23 @@
   transform: rotateX(68deg);
   transform-origin: 50% 100%;
   background-image:
-    linear-gradient(to right, oklch(0.82 0.12 187 / 0.22) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(0.82 0.12 187 / 0.22) 1px, transparent 1px);
+    linear-gradient(to right, oklch(0.75 0.15 158 / 0.2) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.6 0.14 250 / 0.2) 1px, transparent 1px);
   background-size: 60px 60px;
   animation: gridScroll 3.5s linear infinite;
 }
 
+/* Slow rotating abstract shapes for premium 3D depth. */
+@keyframes shapeSpin {
+  0% { transform: rotate(0deg) translate3d(0,0,0); }
+  100% { transform: rotate(360deg) translate3d(0,0,0); }
+}
+@utility shape-spin {
+  animation: shapeSpin 40s linear infinite;
+  will-change: transform;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .orb-float, .grid-plane { animation: none; }
+  .orb-float, .grid-plane, .shape-spin { animation: none; }
 }
 
