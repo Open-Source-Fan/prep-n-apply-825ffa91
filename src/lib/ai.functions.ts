@@ -3,6 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { generateText } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider, CHAT_MODEL } from "./ai-gateway.server";
+import { scoreAnswerRuleBased, composite, LLM_WEIGHT, RULE_WEIGHT, type RuleBreakdown } from "./scoring";
 
 // Shared validation limits to prevent oversized/malicious payloads reaching the LLM
 const shortStr = z.string().trim().max(300);
