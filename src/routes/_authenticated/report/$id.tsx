@@ -28,6 +28,19 @@ export const Route = createFileRoute("/_authenticated/report/$id")({
   component: Report,
 });
 
+type PerQ = {
+  question: string;
+  category?: string;
+  score: number;
+  llmScore?: number;
+  ruleScore?: number;
+  contentRelevance?: number;
+  starScore?: number;
+  keywordCoverage?: number;
+  conceptScore?: number;
+  detectedStar?: { situation: boolean; task: boolean; action: boolean; result: boolean; quantified: boolean } | null;
+  feedback: string;
+};
 type Report = {
   overall: number;
   readinessLevel: string;
@@ -35,7 +48,8 @@ type Report = {
   competencies: { name: string; score: number }[];
   strengths: string[];
   weaknesses: string[];
-  perQuestion: { question: string; score: number; feedback: string }[];
+  perQuestion: PerQ[];
+  scoring?: { llmAverage: number; ruleAverage: number; weights: { llm: number; rule: number } };
 };
 
 function readinessColor(level: string) {
