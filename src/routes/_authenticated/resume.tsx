@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { analyzeResume } from "@/lib/ai.functions";
@@ -37,6 +38,20 @@ function ResumePage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Analysis | null>(null);
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => (await supabase.from("profiles").select("*").eq("id", user!.id).maybeSingle()).data,
+    enabled: !!user,
+  });
+
+  // Reuse the resume saved during interview setup (or a previous analysis).
+  useEffect(() => {
+    if (profile?.resume_text && !resume) {
+      setResume(profile.resume_text);
+      setFileName(profile.resume_file_name ?? "");
+    }
+  }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
@@ -63,6 +78,13 @@ function ResumePage() {
         match_score: a.matchScore,
         analysis: a as never,
       });
+      // Save the resume to the profile so it's reused in interview setup too.
+      if (resume.trim() !== (profile?.resume_text ?? "").trim()) {
+        await supabase
+          .from("profiles")
+          .update({ resume_text: resume.trim(), resume_file_name: fileName || null })
+          .eq("id", user!.id);
+      }
     } catch (e) {
       console.error(e);
       toast.error("Analysis failed. Try again.");

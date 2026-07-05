@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { analyzeJob, generateQuestions } from "@/lib/ai.functions";
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { Loader2, ArrowRight, ArrowLeft, Check } from "lucide-react";
+import { Loader2, ArrowRight, ArrowLeft, Check, Upload } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/setup")({
   component: Setup,
@@ -40,6 +41,8 @@ function Setup() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [resume, setResume] = useState("");
+  const [resumeName, setResumeName] = useState("");
   const [form, setForm] = useState({
     jobTitle: "",
     company: "",
@@ -49,12 +52,45 @@ function Setup() {
     difficulty: "Mid",
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => (await supabase.from("profiles").select("*").eq("id", user!.id).maybeSingle()).data,
+    enabled: !!user,
+  });
+
+  // Prefill the saved resume so it's reused across setup and the Resume Analyzer.
+  useEffect(() => {
+    if (profile?.resume_text && !resume) {
+      setResume(profile.resume_text);
+      setResumeName(profile.resume_file_name ?? "");
+    }
+  }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const onResumeFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setResumeName(f.name);
+    if (f.type === "application/pdf") {
+      toast.info("For PDFs, please paste the text into the box below.");
+      return;
+    }
+    setResume(await f.text());
+  };
+
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const start = async () => {
     if (!form.jobTitle.trim()) return toast.error("Please enter a job title");
     setLoading(true);
     try {
+      // Persist the resume once so it's reused by the Resume Analyzer too.
+      if (resume.trim() && resume.trim() !== (profile?.resume_text ?? "").trim()) {
+        await supabase
+          .from("profiles")
+          .update({ resume_text: resume.trim(), resume_file_name: resumeName || null })
+          .eq("id", user!.id);
+      }
+
       let jdAnalysis: unknown = null;
       try {
         jdAnalysis = await analyzeJob({ data: { jobTitle: form.jobTitle, company: form.company, jobDescription: form.jobDescription } });
@@ -72,6 +108,7 @@ function Setup() {
             interviewType: form.interviewType,
             difficulty: form.difficulty,
             jdAnalysis,
+            resume: resume.trim() || undefined,
             count: 6,
           },
         });
@@ -132,6 +169,17 @@ function Setup() {
             <div className="space-y-2">
               <Label>Job description (optional — improves question quality)</Label>
               <Textarea rows={6} value={form.jobDescription} onChange={(e) => set("jobDescription", e.target.value)} placeholder="Paste the JD here…" />
+            </div>
+            <div className="space-y-2">
+              <Label>Your resume (optional — personalizes difficulty & focus, saved for the Resume Analyzer too)</Label>
+              <div className="flex items-center gap-2">
+                <Input type="file" accept=".txt,.md,.pdf" onChange={onResumeFile} className="cursor-pointer" />
+                <Upload className="size-4 text-muted-foreground" />
+              </div>
+              <Textarea rows={5} value={resume} onChange={(e) => setResume(e.target.value)} placeholder="Paste your resume text here…" />
+              {profile?.resume_text && (
+                <p className="text-xs text-muted-foreground">Loaded your saved resume{resumeName ? ` (${resumeName})` : ""}. Edits here update it everywhere.</p>
+              )}
             </div>
             <Button className="w-full gradient-primary text-primary-foreground" onClick={() => setStep(2)}>
               Continue <ArrowRight className="size-4" />

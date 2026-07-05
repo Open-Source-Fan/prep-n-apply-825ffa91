@@ -28,6 +28,19 @@ export const Route = createFileRoute("/_authenticated/report/$id")({
   component: Report,
 });
 
+type PerQ = {
+  question: string;
+  category?: string;
+  score: number;
+  llmScore?: number;
+  ruleScore?: number;
+  contentRelevance?: number;
+  starScore?: number;
+  keywordCoverage?: number;
+  conceptScore?: number;
+  detectedStar?: { situation: boolean; task: boolean; action: boolean; result: boolean; quantified: boolean } | null;
+  feedback: string;
+};
 type Report = {
   overall: number;
   readinessLevel: string;
@@ -35,7 +48,8 @@ type Report = {
   competencies: { name: string; score: number }[];
   strengths: string[];
   weaknesses: string[];
-  perQuestion: { question: string; score: number; feedback: string }[];
+  perQuestion: PerQ[];
+  scoring?: { llmAverage: number; ruleAverage: number; weights: { llm: number; rule: number } };
 };
 
 function readinessColor(level: string) {
@@ -90,6 +104,33 @@ function Report() {
             <p className="text-sm text-muted-foreground">{report.summary}</p>
           </div>
         </div>
+
+        {report.scoring && (
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+            <h3 className="mb-1 font-semibold">Hybrid scoring breakdown</h3>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Your final score blends two independent layers — subjective LLM quality and deterministic rule-based signals.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
+                <div className="text-3xl font-bold text-primary">{report.scoring.llmAverage}%</div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  LLM quality · weight {Math.round(report.scoring.weights.llm * 100)}%
+                </div>
+              </div>
+              <div className="rounded-xl border border-chart-2/40 bg-chart-2/5 p-4 text-center">
+                <div className="text-3xl font-bold" style={{ color: "var(--chart-2)" }}>{report.scoring.ruleAverage}%</div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Rule-based · weight {Math.round(report.scoring.weights.rule * 100)}%
+                </div>
+              </div>
+              <div className="rounded-xl border border-border bg-secondary/40 p-4 text-center">
+                <div className="text-3xl font-bold text-gradient">{Math.round(report.overall)}%</div>
+                <div className="mt-1 text-xs text-muted-foreground">Composite (blended)</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
@@ -146,7 +187,54 @@ function Report() {
                     <span className="shrink-0 font-bold" style={{ color: barColor(q.score) }}>{q.score}%</span>
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">{q.feedback || "No feedback recorded."}</AccordionContent>
+                <AccordionContent className="space-y-3 text-sm text-muted-foreground">
+                  <p>{q.feedback || "No feedback recorded."}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {q.llmScore != null && (
+                      <span className="rounded-md border border-primary/30 bg-primary/5 px-2 py-1 text-xs text-primary">
+                        LLM quality {q.llmScore}%
+                      </span>
+                    )}
+                    {q.ruleScore != null && (
+                      <span className="rounded-md border border-border bg-secondary/40 px-2 py-1 text-xs">
+                        Rule-based {q.ruleScore}%
+                      </span>
+                    )}
+                    {q.contentRelevance != null && (
+                      <span className="rounded-md border border-border bg-secondary/40 px-2 py-1 text-xs">
+                        Content relevance {q.contentRelevance}%
+                      </span>
+                    )}
+                    {/behav/i.test(q.category ?? "") && q.starScore != null && (
+                      <span className="rounded-md border border-border bg-secondary/40 px-2 py-1 text-xs">
+                        STAR completeness {q.starScore}%
+                      </span>
+                    )}
+                    {q.keywordCoverage != null && (
+                      <span className="rounded-md border border-border bg-secondary/40 px-2 py-1 text-xs">
+                        Keyword coverage {q.keywordCoverage}%
+                      </span>
+                    )}
+                  </div>
+                  {/behav/i.test(q.category ?? "") && q.detectedStar && (
+                    <div className="flex flex-wrap gap-2">
+                      {([
+                        ["Situation", q.detectedStar.situation],
+                        ["Task", q.detectedStar.task],
+                        ["Action", q.detectedStar.action],
+                        ["Result", q.detectedStar.result],
+                        ["Quantified impact", q.detectedStar.quantified],
+                      ] as const).map(([label, present]) => (
+                        <span
+                          key={label}
+                          className={`rounded-md px-2 py-1 text-xs ${present ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}
+                        >
+                          {present ? "✓" : "✗"} {label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>

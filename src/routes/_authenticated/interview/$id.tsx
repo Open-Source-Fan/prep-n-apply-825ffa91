@@ -19,14 +19,7 @@ export const Route = createFileRoute("/_authenticated/interview/$id")({
 });
 
 type Q = { id: string; text: string; category: string; difficulty: string };
-type Eval = {
-  scores: { technicalDepth: number; communication: number; problemSolving: number; practicalExperience: number };
-  overall: number;
-  feedback: string;
-  strengths: string[];
-  improvements: string[];
-  followUp: string | null;
-};
+type Eval = import("@/lib/ai.functions").HybridEval;
 
 function Room() {
   const { id } = Route.useParams();
@@ -114,31 +107,82 @@ function Room() {
     try {
       const qa = questions.map((q) => {
         const res = results[q.id];
-        return { question: q.text, answer: res?.answer ?? "(skipped)", overall: res?.eval.overall };
+        return { question: q.text, answer: res?.answer ?? "(skipped)", overall: res?.eval.composite };
       });
-      let report;
+
+      // Deterministic per-question breakdown built from the hybrid evals we already have.
+      const avg = (nums: number[]) => (nums.length ? Math.round(nums.reduce((a, b) => a + b, 0) / nums.length) : 0);
+      const evals = questions.map((q) => results[q.id]?.eval).filter(Boolean) as Eval[];
+      const composites = evals.map((e) => e.composite);
+      const overall = avg(composites);
+
+      const perQuestion = questions.map((q) => {
+        const e = results[q.id]?.eval;
+        return {
+          question: q.text,
+          category: q.category,
+          score: e?.composite ?? 0,
+          llmScore: e?.llm.overall ?? 0,
+          ruleScore: e?.rule.overall ?? 0,
+          contentRelevance: e?.llm.contentRelevance.score ?? 0,
+          starScore: e?.rule.starScore ?? 0,
+          keywordCoverage: e?.rule.keywordCoverage ?? 0,
+          conceptScore: e?.rule.conceptScore ?? 0,
+          detectedStar: e?.rule.detectedStar ?? null,
+          feedback: e?.feedback ?? (e ? "" : "Skipped."),
+        };
+      });
+
+      const competencies = [
+        { name: "Technical Depth", score: avg(evals.map((e) => e.llm.technicalDepth.score)) },
+        { name: "Communication", score: avg(evals.map((e) => e.llm.reasoningQuality.score)) },
+        { name: "Problem Solving", score: avg(evals.map((e) => e.llm.problemSolving.score)) },
+        { name: "Content Relevance", score: avg(evals.map((e) => e.llm.contentRelevance.score)) },
+        { name: "Practical Experience", score: avg(evals.map((e) => e.llm.answerMaturity.score)) },
+      ];
+
+      const scoring = {
+        llmAverage: avg(evals.map((e) => e.llm.overall)),
+        ruleAverage: avg(evals.map((e) => e.rule.overall)),
+        weights: { llm: 0.6, rule: 0.4 },
+      };
+
+      // LLM narrative layer (summary / strengths / weaknesses / readiness) — deterministic scores override its numbers.
+      let narrative: {
+        readinessLevel: string;
+        summary: string;
+        strengths: string[];
+        weaknesses: string[];
+      };
       try {
-        report = await generateReport({ data: { jobTitle: session!.job_title, difficulty: session!.difficulty, qa } });
+        const r = await generateReport({ data: { jobTitle: session!.job_title, difficulty: session!.difficulty, qa } });
+        narrative = {
+          readinessLevel: r.readinessLevel,
+          summary: r.summary,
+          strengths: r.strengths ?? [],
+          weaknesses: r.weaknesses ?? [],
+        };
       } catch (e) {
-        console.warn("report gen failed", e);
-        const scored = qa.filter((q) => q.overall != null);
-        const overall = scored.length ? Math.round(scored.reduce((a, q) => a + (q.overall ?? 0), 0) / scored.length) : 0;
-        report = {
-          overall,
+        console.warn("report narrative failed", e);
+        narrative = {
           readinessLevel: overall >= 80 ? "Ready" : overall >= 60 ? "Almost Ready" : "Needs Work",
-          summary: "Report generated from your answer scores.",
-          competencies: [
-            { name: "Technical Depth", score: overall },
-            { name: "Communication", score: overall },
-            { name: "Problem Solving", score: overall },
-            { name: "Practical Experience", score: overall },
-            { name: "Role Fit", score: overall },
-          ],
+          summary: "Report generated from your hybrid answer scores.",
           strengths: [],
           weaknesses: [],
-          perQuestion: qa.map((q) => ({ question: q.question, score: q.overall ?? 0, feedback: "" })),
         };
       }
+
+      const report = {
+        overall,
+        readinessLevel: narrative.readinessLevel,
+        summary: narrative.summary,
+        competencies,
+        strengths: narrative.strengths,
+        weaknesses: narrative.weaknesses,
+        perQuestion,
+        scoring,
+      };
+
       await supabase
         .from("interview_sessions")
         .update({

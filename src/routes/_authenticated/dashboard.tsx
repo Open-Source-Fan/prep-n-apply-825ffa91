@@ -72,6 +72,11 @@ function Dashboard() {
           <h1 className="text-3xl font-bold">
             Hi, <span className="text-gradient">{name}</span> 👋
           </h1>
+          {total === 0 && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Get started in 3 steps: paste a JD → practice a mock interview → get your readiness report.
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
