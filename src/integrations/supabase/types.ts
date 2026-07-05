@@ -140,6 +140,8 @@ export type Database = {
           full_name: string | null
           id: string
           last_practice_date: string | null
+          resume_file_name: string | null
+          resume_text: string | null
           streak: number
           target_company: string | null
           target_role: string | null
@@ -153,6 +155,8 @@ export type Database = {
           full_name?: string | null
           id: string
           last_practice_date?: string | null
+          resume_file_name?: string | null
+          resume_text?: string | null
           streak?: number
           target_company?: string | null
           target_role?: string | null
@@ -166,6 +170,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_practice_date?: string | null
+          resume_file_name?: string | null
+          resume_text?: string | null
           streak?: number
           target_company?: string | null
           target_role?: string | null
