@@ -19,14 +19,7 @@ export const Route = createFileRoute("/_authenticated/interview/$id")({
 });
 
 type Q = { id: string; text: string; category: string; difficulty: string };
-type Eval = {
-  scores: { technicalDepth: number; communication: number; problemSolving: number; practicalExperience: number };
-  overall: number;
-  feedback: string;
-  strengths: string[];
-  improvements: string[];
-  followUp: string | null;
-};
+type Eval = import("@/lib/ai.functions").HybridEval;
 
 function Room() {
   const { id } = Route.useParams();
