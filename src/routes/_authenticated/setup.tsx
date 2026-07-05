@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { analyzeJob, generateQuestions } from "@/lib/ai.functions";
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { Loader2, ArrowRight, ArrowLeft, Check } from "lucide-react";
+import { Loader2, ArrowRight, ArrowLeft, Check, Upload } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/setup")({
   component: Setup,
