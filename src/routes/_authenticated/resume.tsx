@@ -38,6 +38,20 @@ function ResumePage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Analysis | null>(null);
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    queryFn: async () => (await supabase.from("profiles").select("*").eq("id", user!.id).maybeSingle()).data,
+    enabled: !!user,
+  });
+
+  // Reuse the resume saved during interview setup (or a previous analysis).
+  useEffect(() => {
+    if (profile?.resume_text && !resume) {
+      setResume(profile.resume_text);
+      setFileName(profile.resume_file_name ?? "");
+    }
+  }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
