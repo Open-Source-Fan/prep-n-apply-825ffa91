@@ -170,6 +170,17 @@ function Setup() {
               <Label>Job description (optional — improves question quality)</Label>
               <Textarea rows={6} value={form.jobDescription} onChange={(e) => set("jobDescription", e.target.value)} placeholder="Paste the JD here…" />
             </div>
+            <div className="space-y-2">
+              <Label>Your resume (optional — personalizes difficulty & focus, saved for the Resume Analyzer too)</Label>
+              <div className="flex items-center gap-2">
+                <Input type="file" accept=".txt,.md,.pdf" onChange={onResumeFile} className="cursor-pointer" />
+                <Upload className="size-4 text-muted-foreground" />
+              </div>
+              <Textarea rows={5} value={resume} onChange={(e) => setResume(e.target.value)} placeholder="Paste your resume text here…" />
+              {profile?.resume_text && (
+                <p className="text-xs text-muted-foreground">Loaded your saved resume{resumeName ? ` (${resumeName})` : ""}. Edits here update it everywhere.</p>
+              )}
+            </div>
             <Button className="w-full gradient-primary text-primary-foreground" onClick={() => setStep(2)}>
               Continue <ArrowRight className="size-4" />
             </Button>
