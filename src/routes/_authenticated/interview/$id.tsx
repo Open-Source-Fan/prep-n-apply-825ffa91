@@ -250,7 +250,7 @@ function Room() {
 
           <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
             <Badge className="mb-3" variant="secondary">{current.category}</Badge>
-            <p className="text-lg font-medium leading-relaxed">{followUp ?? current.text}</p>
+            <p className="text-lg font-medium leading-relaxed break-words [overflow-wrap:anywhere]">{followUp ?? current.text}</p>
             {followUp && <Badge className="mt-3 bg-warning/20 text-warning">Follow-up probe</Badge>}
           </div>
 
