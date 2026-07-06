@@ -22,7 +22,8 @@ import {
   YAxis,
   Cell,
 } from "recharts";
-import { Loader2, ThumbsUp, ThumbsDown, MessageSquare, RotateCcw } from "lucide-react";
+import { Loader2, ThumbsUp, ThumbsDown, MessageSquare, RotateCcw, Download } from "lucide-react";
+import { downloadReportPdf } from "@/lib/report-pdf";
 
 export const Route = createFileRoute("/_authenticated/report/$id")({
   component: Report,
