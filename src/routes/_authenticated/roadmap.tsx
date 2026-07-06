@@ -315,7 +315,7 @@ function Roadmap() {
                               disabled={isOldVersion}
                               onCheckedChange={() => toggleTask(r.id, key, progress)}
                             />
-                            <span className={progress[key] ? "text-muted-foreground line-through" : ""}>{t}</span>
+                            <span className={`min-w-0 break-words [overflow-wrap:anywhere] ${progress[key] ? "text-muted-foreground line-through" : ""}`}>{t}</span>
                           </label>
                         );
                       })}

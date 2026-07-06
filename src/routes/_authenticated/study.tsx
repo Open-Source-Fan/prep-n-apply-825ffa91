@@ -136,7 +136,7 @@ function Study() {
                         <span className="font-semibold">Day {d.day}: {d.topic}</span>
                       </label>
                       <ul className="mt-2 space-y-1 pl-6 text-sm text-muted-foreground">
-                        {d.tasks.map((t, i) => <li key={i}>• {t}</li>)}
+                        {d.tasks.map((t, i) => <li key={i} className="break-words [overflow-wrap:anywhere]">• {t}</li>)}
                       </ul>
                       {d.resources?.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5 pl-6">
