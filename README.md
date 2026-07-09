@@ -7,7 +7,7 @@
 **Practice smarter. Get evaluated like a real technical interview. Know exactly where you stand.**
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-prep--n--apply.lovable.app-14b8a6?style=for-the-badge)](https://prep-n-apply.lovable.app)
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/Open-Source-Fan/prep-n-apply-825ffa91)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github)](https://github.com/Open-Source-Fan/prep-n-apply)
 [![License](https://img.shields.io/badge/License-Educational-blue?style=for-the-badge)]()
 
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)](https://react.dev)
@@ -262,8 +262,8 @@ prep-n-apply/
 
 ```bash
 # Clone the repository
-git clone https://github.com/Open-Source-Fan/prep-n-apply-825ffa91.git
-cd prep-n-apply-825ffa91
+git clone https://github.com/Open-Source-Fan/prep-n-apply.git
+cd prep-n-apply
 
 # Install dependencies
 bun install
